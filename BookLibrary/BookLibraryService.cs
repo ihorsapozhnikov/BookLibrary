@@ -23,6 +23,14 @@ public class BookLibraryService
     public void AddBook(Book book)
     {
         ArgumentNullException.ThrowIfNull(book);
+        ArgumentException.ThrowIfNullOrWhiteSpace(book.Title);
+        ArgumentException.ThrowIfNullOrWhiteSpace(book.Author);
+
+        if (book.PageCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(book.PageCount), "Page count must be greater than zero.");
+        }
+
         _books.Add(book);
     }
 

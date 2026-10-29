@@ -67,6 +67,59 @@ public class BookLibraryServiceTests
         Assert.Throws<ArgumentNullException>(() => service.AddBook(null!));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void AddBook_ShouldThrowArgumentException_WhenTitleIsEmptyOrWhitespace(string title)
+    {
+        var repository = new FakeBookRepository();
+        var service = new BookLibraryService(repository, "books.xml");
+
+        var book = new Book
+        {
+            Title = title,
+            Author = "Stephen King",
+            PageCount = 1000
+        };
+
+        Assert.Throws<ArgumentException>(() => service.AddBook(book));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void AddBook_ShouldThrowArgumentException_WhenAuthorIsEmptyOrWhitespace(string author)
+    {
+        var repository = new FakeBookRepository();
+        var service = new BookLibraryService(repository, "books.xml");
+
+        var book = new Book
+        {
+            Title = "The Green Mile",
+            Author = author,
+            PageCount = 1000
+        };
+
+        Assert.Throws<ArgumentException>(() => service.AddBook(book));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AddBook_ShouldThrowArgumentOutOfRangeException_WhenPageCountIsNotPositive(int pageCount)
+    {
+        var repository = new FakeBookRepository();
+        var service = new BookLibraryService(repository, "books.xml");
+
+        var book = new Book
+        {
+            Title = "The Green Mile",
+            Author = "Stephen King",
+            PageCount = pageCount
+        };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => service.AddBook(book));
+    }
     #endregion
 
     #region GetSortedBooks Tests
