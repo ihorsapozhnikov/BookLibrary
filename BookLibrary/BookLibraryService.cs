@@ -31,12 +31,12 @@ public class BookLibraryService
             throw new ArgumentOutOfRangeException(nameof(book.PageCount), "Page count must be greater than zero.");
         }
 
-        _books.Add(book);
+        _books.Add(CloneBook(book));
     }
 
     public List<Book> GetBooks()
     {
-        return _books.ToList();
+        return _books.Select(CloneBook).ToList();
     }
 
     public List<Book> GetSortedBooks()
@@ -44,6 +44,7 @@ public class BookLibraryService
         return _books
             .OrderBy(book => book.Author, StringComparer.OrdinalIgnoreCase)
             .ThenBy(book => book.Title, StringComparer.OrdinalIgnoreCase)
+            .Select(CloneBook)
             .ToList();
     }
 
@@ -51,11 +52,24 @@ public class BookLibraryService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(searchText);
 
-        return _books.Where(book => book.Title.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+        return _books
+            .Where(book => book.Title.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Select(CloneBook)
+            .ToList();
     }
 
     public void SaveBooks()
     {
         _repository.Save(_books, _filePath);
+    }
+
+    private static Book CloneBook(Book book)
+    {
+        return new Book
+        {
+            Title = book.Title,
+            Author = book.Author,
+            PageCount = book.PageCount
+        };
     }
 }
