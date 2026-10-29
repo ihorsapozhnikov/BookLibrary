@@ -1,0 +1,38 @@
+﻿
+using System.Xml.Serialization;
+
+namespace BookLibrary;
+
+public class BookRepository : IBookRepository
+{
+    public List<Book> Load(string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("XML file was not found.", filePath);
+        }
+
+        var serializer = CreateSerializer();
+
+        using var stream = File.OpenRead(filePath);
+        var result = serializer.Deserialize(stream);
+
+        if (result is not List<Book> books)
+        {
+            throw new InvalidOperationException("Failed to deserialize books from XML.");
+        }
+
+        return books;
+    }
+
+    public void Save(List<Book> books)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static XmlSerializer CreateSerializer()
+    {
+        return new XmlSerializer(typeof(List<Book>), new XmlRootAttribute("Books"));
+    }
+}
