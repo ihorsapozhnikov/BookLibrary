@@ -26,9 +26,15 @@ public class BookRepository : IBookRepository
         return books;
     }
 
-    public void Save(List<Book> books)
+    public void Save(List<Book> books, string filePath)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(books);
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
+        var serializer = CreateSerializer();
+
+        using var stream = File.Create(filePath);
+        serializer.Serialize(stream, books);
     }
 
     private static XmlSerializer CreateSerializer()

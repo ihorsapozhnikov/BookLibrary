@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BookLibrary.Tests
+﻿namespace BookLibrary.Tests
 {
     public class BookRepositoryTests
     {
@@ -34,9 +30,11 @@ namespace BookLibrary.Tests
                 var books = _repository.Load(filePath);
 
                 Assert.Equal(2, books.Count);
+
                 Assert.Equal("The Green Mile", books[0].Title);
                 Assert.Equal("Stephen King", books[0].Author);
                 Assert.Equal(1000, books[0].PageCount);
+
                 Assert.Equal("It", books[1].Title);
                 Assert.Equal(2000, books[1].PageCount);
             }
@@ -79,5 +77,65 @@ namespace BookLibrary.Tests
             Assert.Throws<ArgumentException>(() => _repository.Load(filePath));
         }
 
+        [Fact]
+        public void Save_ShouldSaveBooksToXmlFile()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+            var books = new List<Book>
+            {
+                new()
+                {
+                    Title = "The Green Mile",
+                    Author = "Stephen King",
+                    PageCount = 1000
+                },
+                new()
+                {
+                    Title = "It",
+                    Author = "Stephen King",
+                    PageCount = 2000
+                }
+            };
+
+            try
+            {
+                _repository.Save(books, filePath);
+
+                Assert.True(File.Exists(filePath));
+
+                var loadedBooks = _repository.Load(filePath);
+
+                Assert.Equal(2, loadedBooks.Count);
+
+                Assert.Equal("The Green Mile", loadedBooks[0].Title);
+                Assert.Equal("Stephen King", loadedBooks[0].Author);
+                Assert.Equal(1000, loadedBooks[0].PageCount);
+
+                Assert.Equal("It", loadedBooks[1].Title);
+                Assert.Equal(2000, loadedBooks[1].PageCount);
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        public void Save_ShouldSaveEmptyList()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+            try
+            {
+                _repository.Save(new List<Book>(), filePath);
+                var loadedBooks = _repository.Load(filePath);
+                Assert.Empty(loadedBooks);
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
     }
 }
