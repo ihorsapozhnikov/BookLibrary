@@ -1,6 +1,6 @@
 ﻿namespace BookLibrary.Tests
 {
-    public sealed class FakeBookRepository : IBookRepository
+    internal sealed class FakeBookRepository : IBookRepository
     {
         public List<Book> BooksToLoad { get; set; } = new();
         public List<Book>? SavedBooks { get; private set; }

@@ -281,4 +281,90 @@ public class BookLibraryServiceTests
     }
 
     #endregion
+
+    #region LoadBooks Tests
+
+    [Fact]
+    public void LoadBooks_ShouldLoadBooksFromRepository()
+    {
+        var repository = new FakeBookRepository();
+
+        repository.BooksToLoad.Add(new Book
+        {
+            Title = "The Green Mile",
+            Author = "Stephen King",
+            PageCount = 1000
+        });
+
+        var service = new BookLibraryService(repository, "books.xml");
+
+        service.LoadBooks();
+
+        var books = service.GetBooks();
+
+        var book = Assert.Single(books);
+        Assert.Equal("The Green Mile", book.Title);
+        Assert.Equal("Stephen King", book.Author);
+        Assert.Equal(1000, book.PageCount);
+        Assert.Equal("books.xml", repository.LoadedFilePath);
+    }
+
+    [Fact]
+    public void LoadBooks_ShouldReplaceExistingBooks()
+    {
+        var repository = new FakeBookRepository();
+        var service = new BookLibraryService(repository, "books.xml");
+
+        service.AddBook(new Book
+        {
+            Title = "The Green Mile",
+            Author = "Stephen King",
+            PageCount = 1000
+        });
+
+        repository.BooksToLoad.Add(new Book
+        {
+            Title = "It",
+            Author = "Stephen King",
+            PageCount = 2000
+        });
+
+        service.LoadBooks();
+
+        var books = service.GetBooks();
+
+        var book = Assert.Single(books);
+        Assert.Equal("It", book.Title);
+        Assert.Equal("Stephen King", book.Author);
+        Assert.Equal(2000, book.PageCount);
+    }
+
+    #endregion
+
+    #region SaveBooks Tests
+
+    [Fact]
+    public void SaveBooks_ShouldSaveBooksToRepository()
+    {
+        var repository = new FakeBookRepository();
+        var service = new BookLibraryService(repository, "books.xml");
+
+        service.AddBook(new Book
+        {
+            Title = "The Green Mile",
+            Author = "Stephen King",
+            PageCount = 1000
+        });
+
+        service.SaveBooks();
+
+        var book = Assert.Single(repository.SavedBooks!);
+
+        Assert.Equal("The Green Mile", book.Title);
+        Assert.Equal("Stephen King", book.Author);
+        Assert.Equal(1000, book.PageCount);
+        Assert.Equal("books.xml", repository.SavedFilePath);
+    }
+
+    #endregion
 }
