@@ -1,4 +1,7 @@
-﻿namespace BookLibrary.Tests
+﻿using System.Xml.Linq;
+using BookLibrary;
+
+namespace BookLibrary.Tests
 {
     public class BookRepositoryTests
     {
@@ -36,6 +39,7 @@
                 Assert.Equal(1000, books[0].PageCount);
 
                 Assert.Equal("It", books[1].Title);
+                Assert.Equal("Stephen King", books[1].Author);
                 Assert.Equal(2000, books[1].PageCount);
             }
             finally
@@ -78,6 +82,23 @@
         }
 
         [Fact]
+        public void Load_ShouldThrowInvalidOperationException_WhenXmlIsInvalid()
+        {
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                File.WriteAllText(filePath, "<Books><Book>");
+
+                Assert.Throws<InvalidOperationException>(() => _repository.Load(filePath));
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
         public void Save_ShouldSaveBooksToXmlFile()
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -103,6 +124,7 @@
                 _repository.Save(books, filePath);
 
                 Assert.True(File.Exists(filePath));
+                Assert.Equal("Books", XDocument.Load(filePath).Root?.Name.LocalName);
 
                 var loadedBooks = _repository.Load(filePath);
 
@@ -113,6 +135,7 @@
                 Assert.Equal(1000, loadedBooks[0].PageCount);
 
                 Assert.Equal("It", loadedBooks[1].Title);
+                Assert.Equal("Stephen King", loadedBooks[1].Author);
                 Assert.Equal(2000, loadedBooks[1].PageCount);
             }
             finally
@@ -136,6 +159,20 @@
             {
                 File.Delete(filePath);
             }
+        }
+
+        [Fact]
+        public void Save_ShouldThrowArgumentNullException_WhenBooksIsNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => _repository.Save(null!, "books.xml"));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("  ")]
+        public void Save_ShouldThrowArgumentException_WhenFilePathIsEmptyOrWhitespace(string filePath)
+        {
+            Assert.Throws<ArgumentException>(() => _repository.Save(new List<Book>(), filePath));
         }
     }
 }
