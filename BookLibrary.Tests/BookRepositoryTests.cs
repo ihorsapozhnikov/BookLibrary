@@ -1,5 +1,4 @@
 ﻿using System.Xml.Linq;
-using BookLibrary;
 
 namespace BookLibrary.Tests
 {
@@ -91,6 +90,36 @@ namespace BookLibrary.Tests
                 File.WriteAllText(filePath, "<Books><Book>");
 
                 Assert.Throws<InvalidOperationException>(() => _repository.Load(filePath));
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        public void Load_ShouldThrowInvalidDataException_WhenBookHasInvalidPageCount()
+        {
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                File.WriteAllText(filePath, """
+                <Books>
+                  <Book>
+                    <Title>The Green Mile</Title>
+                    <Author>Stephen King</Author>
+                    <PageCount>1000</PageCount>
+                  </Book>
+                  <Book>
+                    <Title>It</Title>
+                    <Author>Stephen King</Author>
+                    <PageCount>0</PageCount>
+                  </Book>
+                </Books>
+                """);
+
+                Assert.Throws<InvalidDataException>(() => _repository.Load(filePath));
             }
             finally
             {

@@ -1,5 +1,4 @@
-﻿
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace BookLibrary;
 
@@ -21,6 +20,11 @@ public class BookRepository : IBookRepository
         if (result is not List<Book> books)
         {
             throw new InvalidOperationException("Failed to deserialize books from XML.");
+        }
+
+        if (books.Any(book => book.PageCount <= 0))
+        {
+            throw new InvalidDataException("All books must have a page count greater than zero.");
         }
 
         return books;
