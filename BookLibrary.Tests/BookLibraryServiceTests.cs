@@ -2,14 +2,20 @@
 
 public class BookLibraryServiceTests
 {
+    private readonly FakeBookRepository _repository;
+    private readonly BookLibraryService _service;
+
+    public BookLibraryServiceTests()
+    {
+        _repository = new FakeBookRepository();
+        _service = new BookLibraryService(_repository, "books.xml");
+    }
+
     #region AddBook Tests
 
     [Fact]
     public void AddBook_ShouldAddBookToLibrary()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
         var book = new Book
         {
             Title = "The Green Mile",
@@ -17,9 +23,9 @@ public class BookLibraryServiceTests
             PageCount = 1000
         };
 
-        service.AddBook(book);
+        _service.AddBook(book);
 
-        var books = service.GetBooks();
+        var books = _service.GetBooks();
 
         Assert.Single(books);
         Assert.Equal("The Green Mile", books[0].Title);
@@ -27,13 +33,9 @@ public class BookLibraryServiceTests
         Assert.Equal(1000, books[0].PageCount);
     }
 
-
     [Fact]
     public void AddBook_ShouldAddMultipleBooksToLibrary()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
         var firstBook = new Book
         {
             Title = "The Green Mile",
@@ -48,10 +50,10 @@ public class BookLibraryServiceTests
             PageCount = 100
         };
 
-        service.AddBook(firstBook);
-        service.AddBook(secondBook);
+        _service.AddBook(firstBook);
+        _service.AddBook(secondBook);
 
-        var books = service.GetBooks();
+        var books = _service.GetBooks();
 
         Assert.Equal(2, books.Count);
         Assert.Equal("The Green Mile", books[0].Title);
@@ -61,10 +63,7 @@ public class BookLibraryServiceTests
     [Fact]
     public void AddBook_ShouldThrowArgumentNullException_WhenBookIsNull()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        Assert.Throws<ArgumentNullException>(() => service.AddBook(null!));
+        Assert.Throws<ArgumentNullException>(() => _service.AddBook(null!));
     }
 
     [Theory]
@@ -72,9 +71,6 @@ public class BookLibraryServiceTests
     [InlineData("  ")]
     public void AddBook_ShouldThrowArgumentException_WhenTitleIsEmptyOrWhitespace(string title)
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
         var book = new Book
         {
             Title = title,
@@ -82,7 +78,7 @@ public class BookLibraryServiceTests
             PageCount = 1000
         };
 
-        Assert.Throws<ArgumentException>(() => service.AddBook(book));
+        Assert.Throws<ArgumentException>(() => _service.AddBook(book));
     }
 
     [Theory]
@@ -90,9 +86,6 @@ public class BookLibraryServiceTests
     [InlineData(" ")]
     public void AddBook_ShouldThrowArgumentException_WhenAuthorIsEmptyOrWhitespace(string author)
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
         var book = new Book
         {
             Title = "The Green Mile",
@@ -100,7 +93,7 @@ public class BookLibraryServiceTests
             PageCount = 1000
         };
 
-        Assert.Throws<ArgumentException>(() => service.AddBook(book));
+        Assert.Throws<ArgumentException>(() => _service.AddBook(book));
     }
 
     [Theory]
@@ -108,9 +101,6 @@ public class BookLibraryServiceTests
     [InlineData(-1)]
     public void AddBook_ShouldThrowArgumentOutOfRangeException_WhenPageCountIsNotPositive(int pageCount)
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
         var book = new Book
         {
             Title = "The Green Mile",
@@ -118,7 +108,7 @@ public class BookLibraryServiceTests
             PageCount = pageCount
         };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => service.AddBook(book));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _service.AddBook(book));
     }
     #endregion
 
@@ -127,31 +117,28 @@ public class BookLibraryServiceTests
     [Fact]
     public void GetSortedBooks_ShouldSortBooksByAuthorAndTitle()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Little Mermaid",
             Author = "Hans Christian Andersen",
             PageCount = 100
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "It",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        var books = service.GetSortedBooks();
+        var books = _service.GetSortedBooks();
 
         Assert.Equal(["Hans Christian Andersen", "Stephen King", "Stephen King"], books.Select(book => book.Author));
         Assert.Equal(["The Little Mermaid", "It", "The Green Mile"], books.Select(book => book.Title));
@@ -160,25 +147,22 @@ public class BookLibraryServiceTests
     [Fact]
     public void GetSortedBooks_ShouldNotChangeOriginalOrder()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "It",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        var sortedBooks = service.GetSortedBooks();
-        var books = service.GetBooks();
+        var sortedBooks = _service.GetSortedBooks();
+        var books = _service.GetBooks();
 
         Assert.Equal(["The Green Mile", "It"], books.Select(book => book.Title));
         Assert.Equal(["It", "The Green Mile"], sortedBooks.Select(book => book.Title));
@@ -191,24 +175,21 @@ public class BookLibraryServiceTests
     [Fact]
     public void SearchByTitle_ShouldReturnBooks_WhenTitleContainsSearchText()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "It",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        var result = service.SearchByTitle("Green");
+        var result = _service.SearchByTitle("Green");
 
         var book = Assert.Single(result);
         Assert.Equal("The Green Mile", book.Title);
@@ -217,17 +198,14 @@ public class BookLibraryServiceTests
     [Fact]
     public void SearchByTitle_ShouldReturnEmptyList_WhenNoBooksMatch()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        var result = service.SearchByTitle("Harry");
+        var result = _service.SearchByTitle("Harry");
 
         Assert.Empty(result);
     }
@@ -235,17 +213,14 @@ public class BookLibraryServiceTests
     [Fact]
     public void SearchByTitle_ShouldIgnoreCase_WhenSearchingByTitle()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        var result = service.SearchByTitle("green");
+        var result = _service.SearchByTitle("green");
 
         var book = Assert.Single(result);
         Assert.Equal("The Green Mile", book.Title);
@@ -254,31 +229,28 @@ public class BookLibraryServiceTests
     [Fact]
     public void SearchByTitle_ShouldReturnAllMatchingBooks_WhenMultipleBooksMatch()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "Green River",
             Author = "John Smith",
             PageCount = 500
         });
 
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "It",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        var result = service.SearchByTitle("Green");
+        var result = _service.SearchByTitle("Green");
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, book => book.Title == "The Green Mile");
@@ -288,17 +260,14 @@ public class BookLibraryServiceTests
     [Fact]
     public void SearchByTitle_ShouldReturnBook_WhenSearchTextMatchesFullTitle()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        var result = service.SearchByTitle("The Green Mile");
+        var result = _service.SearchByTitle("The Green Mile");
 
         var book = Assert.Single(result);
         Assert.Equal("The Green Mile", book.Title);
@@ -309,26 +278,20 @@ public class BookLibraryServiceTests
     [InlineData("  ")]
     public void SearchByTitle_ShouldThrowArgumentException_WhenSearchTextIsEmptyOrWhitespace(string searchText)
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        Assert.Throws<ArgumentException>(() => service.SearchByTitle(searchText));
+        Assert.Throws<ArgumentException>(() => _service.SearchByTitle(searchText));
     }
 
     [Fact]
     public void SearchByTitle_ShouldNotSearchByAuthor()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        var result = service.SearchByTitle("Stephen King");
+        var result = _service.SearchByTitle("Stephen King");
 
         Assert.Empty(result);
     }
@@ -340,51 +303,44 @@ public class BookLibraryServiceTests
     [Fact]
     public void LoadBooks_ShouldLoadBooksFromRepository()
     {
-        var repository = new FakeBookRepository();
-
-        repository.BooksToLoad.Add(new Book
+        _repository.BooksToLoad.Add(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        var service = new BookLibraryService(repository, "books.xml");
+        _service.LoadBooks();
 
-        service.LoadBooks();
-
-        var books = service.GetBooks();
+        var books = _service.GetBooks();
 
         var book = Assert.Single(books);
         Assert.Equal("The Green Mile", book.Title);
         Assert.Equal("Stephen King", book.Author);
         Assert.Equal(1000, book.PageCount);
-        Assert.Equal("books.xml", repository.LoadedFilePath);
+        Assert.Equal("books.xml", _repository.LoadedFilePath);
     }
 
     [Fact]
     public void LoadBooks_ShouldReplaceExistingBooks()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        repository.BooksToLoad.Add(new Book
+        _repository.BooksToLoad.Add(new Book
         {
             Title = "It",
             Author = "Stephen King",
             PageCount = 2000
         });
 
-        service.LoadBooks();
+        _service.LoadBooks();
 
-        var books = service.GetBooks();
+        var books = _service.GetBooks();
 
         var book = Assert.Single(books);
         Assert.Equal("It", book.Title);
@@ -399,24 +355,21 @@ public class BookLibraryServiceTests
     [Fact]
     public void SaveBooks_ShouldSaveBooksToRepository()
     {
-        var repository = new FakeBookRepository();
-        var service = new BookLibraryService(repository, "books.xml");
-
-        service.AddBook(new Book
+        _service.AddBook(new Book
         {
             Title = "The Green Mile",
             Author = "Stephen King",
             PageCount = 1000
         });
 
-        service.SaveBooks();
+        _service.SaveBooks();
 
-        var book = Assert.Single(repository.SavedBooks!);
+        var book = Assert.Single(_repository.SavedBooks!);
 
         Assert.Equal("The Green Mile", book.Title);
         Assert.Equal("Stephen King", book.Author);
         Assert.Equal(1000, book.PageCount);
-        Assert.Equal("books.xml", repository.SavedFilePath);
+        Assert.Equal("books.xml", _repository.SavedFilePath);
     }
 
     #endregion
