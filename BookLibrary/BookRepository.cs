@@ -22,9 +22,12 @@ public class BookRepository : IBookRepository
             throw new InvalidOperationException("Failed to deserialize books from XML.");
         }
 
-        if (books.Any(book => book.PageCount <= 0))
+        if (books.Any(book =>
+            string.IsNullOrWhiteSpace(book.Title) ||
+            string.IsNullOrWhiteSpace(book.Author) ||
+            book.PageCount <= 0))
         {
-            throw new InvalidDataException("All books must have a page count greater than zero.");
+            throw new InvalidDataException("XML contains invalid book data.");
         }
 
         return books;

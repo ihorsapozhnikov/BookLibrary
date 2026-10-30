@@ -127,6 +127,56 @@ namespace BookLibrary.Tests
             }
         }
 
+        [Theory]
+        [InlineData("""
+                <Books>
+                  <Book>
+                    <Author>Stephen King</Author>
+                    <PageCount>1000</PageCount>
+                  </Book>
+                </Books>
+                """)]
+                    [InlineData("""
+                <Books>
+                  <Book>
+                    <Title>   </Title>
+                    <Author>Stephen King</Author>
+                    <PageCount>1000</PageCount>
+                  </Book>
+                </Books>
+                """)]
+                    [InlineData("""
+                <Books>
+                  <Book>
+                    <Title>The Green Mile</Title>
+                    <PageCount>1000</PageCount>
+                  </Book>
+                </Books>
+                """)]
+                    [InlineData("""
+                <Books>
+                  <Book>
+                    <Title>The Green Mile</Title>
+                    <Author>   </Author>
+                    <PageCount>1000</PageCount>
+                  </Book>
+                </Books>
+                """)]
+        public void Load_ShouldThrowInvalidDataException_WhenBookHasInvalidTitleOrAuthor(string xml)
+        {
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                File.WriteAllText(filePath, xml);
+                Assert.Throws<InvalidDataException>(() => _repository.Load(filePath));
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
         [Fact]
         public void Save_ShouldSaveBooksToXmlFile()
         {
